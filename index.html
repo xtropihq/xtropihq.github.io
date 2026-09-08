@@ -1,1 +1,269 @@
-Xtropi is on your mind.
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>xtropi</title>
+<meta name="description" content="Towards human superintelligence">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,200;0,300;0,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:     #000000;
+    --text:   #ededed;
+    --muted:  #666666;
+    --accent: #ffffff;
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html, body{
+    height:100%;
+    overflow:hidden;
+    overscroll-behavior:none;
+    background:var(--bg);
+    touch-action:none;
+  }
+  body{
+    font-family:'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  #signal{
+    position:fixed; inset:0;
+    width:100%; height:100%;
+    display:block;
+    opacity:0;
+    transition:opacity 3s ease;
+  }
+  #signal.on{ opacity:1; }
+  body.nogl{ background:var(--bg); }
+  body.nogl #signal{ display:none; }
+
+  main{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    text-align:center;
+    padding:0 24px;
+    user-select:none;
+  }
+  h1{
+    font-weight:200;
+    font-size:clamp(1.3rem, 3.9vmin, 2.6rem);
+    letter-spacing:-0.01em;
+    line-height:1.3;
+    text-wrap:balance;
+  }
+  h1 em{ font-style:normal; color:var(--accent); }
+  /* ---------- butterfly dot logo ---------- */
+  .logo{
+    position:fixed; top:30px; left:36px;
+    display:flex; align-items:center; gap:16px;
+    user-select:none;
+  }
+  .logo svg{ width:32px; height:32px; }
+  .logo svg{ display:block; }
+  .logo .d{ fill:var(--accent); animation:wing 4.8s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
+  .logo .d2{ animation-delay:-1.2s; }
+  .logo .d3{ animation-delay:-2.4s; }
+  .logo .d4{ animation-delay:-3.6s; }
+  @keyframes wing{
+    0%,100%{ opacity:0.35; transform:scale(0.82); }
+    50%    { opacity:1;    transform:scale(1); }
+  }
+  .logo .name{
+    font-size:15px; font-weight:400;
+    letter-spacing:0.22em;
+    color:var(--text);
+  }
+
+  /* plain word, bottom-right corner */
+  .contact{
+    position:fixed; bottom:32px; right:36px;
+    font-size:10px; font-weight:300;
+    letter-spacing:0.3em; text-transform:uppercase;
+    color:var(--muted);
+    text-decoration:none;
+    transition:color 0.4s ease;
+    user-select:none;
+  }
+  .contact:hover{ color:var(--text); }
+
+  .reveal{ opacity:0; transform:translateY(10px); animation:rise 1.4s cubic-bezier(0.22,1,0.36,1) forwards; }
+  @keyframes rise{ to{ opacity:1; transform:translateY(0); } }
+  .d1{ animation-delay:0.3s; } .d2{ animation-delay:0.8s; }
+  .d3{ animation-delay:1.3s; }
+
+  /* ---------- small screens ---------- */
+  @media (max-width:640px){
+    .logo{ top:22px; left:22px; gap:12px; }
+    .logo svg{ width:24px; height:24px; }
+    .logo .name{ font-size:13px; letter-spacing:0.18em; }
+    h1{ font-size:clamp(1.1rem, 6.4vw, 1.7rem); }
+    .contact{ bottom:22px; right:22px; font-size:9px; letter-spacing:0.24em; }
+  }
+  @media (max-height:520px){
+    h1{ font-size:clamp(1rem, 6vh, 1.5rem); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .reveal{ animation:none; opacity:1; transform:none; }
+    .logo .d{ animation:none; opacity:0.9; transform:none; }
+  }
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<canvas id="signal"></canvas>
+
+<div class="logo reveal d1" aria-label="xtropi">
+  <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
+    <circle class="d d1" cx="7"  cy="7"  r="3.2"/>
+    <circle class="d d2" cx="19" cy="7"  r="3.2"/>
+    <circle class="d d3" cx="7"  cy="19" r="3.2"/>
+    <circle class="d d4" cx="19" cy="19" r="3.2"/>
+  </svg>
+  <div class="name">xtropi</div>
+</div>
+
+<main>
+  <h1 class="reveal d2">Towards<br>human <em>superintelligence</em></h1>
+</main>
+
+<a class="contact reveal d3" href="mailto:info@xtropi.com">Contact</a>
+
+<script>
+/* one hairline signal ring, centered, breathing — raw WebGL */
+(function(){
+  const canvas = document.getElementById('signal');
+  const gl = canvas.getContext('webgl', { alpha:false });
+  if(!gl){ document.body.classList.add('nogl'); return; }
+
+  const vs = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
+  const fs = `
+    precision highp float;
+    uniform vec2  u_res;
+    uniform float u_time;
+    uniform float u_energy;
+    uniform vec2  u_cursor;   /* pointer in uv space, smoothed */
+
+    float hash(vec2 v){ return fract(sin(dot(v, vec2(127.1, 311.7))) * 43758.5453123); }
+
+    float sig(float a, float t){
+      return sin(a*3.0 + t*0.5) * 0.45
+           + sin(a*5.0 - t*0.9 + 1.7) * 0.25
+           + sin(a*8.0 + t*1.6 + 4.2) * 0.12;
+    }
+
+    void main(){
+      vec2 uv = (gl_FragCoord.xy - 0.5 * u_res) / min(u_res.x, u_res.y);
+      float r   = length(uv);
+      float ang = atan(uv.y, uv.x);
+
+      float breath = 0.85 + 0.15 * sin(u_time * 0.3);
+      float amp    = 0.028 * breath * (0.8 + 0.4 * u_energy);
+
+      /* spacetime well: only when the cursor is near the ring —
+         from afar the circle is untouched, close in it bends and
+         stretches toward the pointer, but never breaks */
+      vec2 toC   = u_cursor - uv;
+      float dist = length(toC);
+      float reach = smoothstep(0.75, 0.38, dist);     /* attraction range */
+      float well  = exp(-dist * dist * 9.0);          /* local well */
+      float pull  = u_energy * reach * well * 0.30;
+      vec2 sp = uv - normalize(toC + 0.0001) * pull;  /* warped sample point */
+
+      float rs   = length(sp);
+      float angs = atan(sp.y, sp.x);
+
+      float rr = 0.40 + amp * sig(angs, u_time);
+      float d  = rs - rr;
+
+      /* pure monochrome — white line on black, nothing else */
+      vec3 col = vec3(0.0);
+      col += vec3(1.0) * ( exp(-d*d*14000.0) * 0.55 + exp(-abs(d)*45.0) * 0.07 );
+
+      /* dark core at the cursor — swallows the line as it crosses */
+      col *= 1.0 - u_energy * reach * 0.9 * exp(-dist * dist * 240.0);
+
+      col *= 1.0 - dot(uv, uv) * 0.45;
+      col += (hash(gl_FragCoord.xy + fract(u_time)) - 0.5) * 0.02;
+
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `;
+
+  function compile(t, s){
+    const sh = gl.createShader(t);
+    gl.shaderSource(sh, s); gl.compileShader(sh);
+    return gl.getShaderParameter(sh, gl.COMPILE_STATUS) ? sh : null;
+  }
+  const v = compile(gl.VERTEX_SHADER, vs), f = compile(gl.FRAGMENT_SHADER, fs);
+  if(!v || !f){ document.body.classList.add('nogl'); return; }
+
+  const prog = gl.createProgram();
+  gl.attachShader(prog, v); gl.attachShader(prog, f); gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 3,-1, -1,3]), gl.STATIC_DRAW);
+  const loc = gl.getAttribLocation(prog, 'p');
+  gl.enableVertexAttribArray(loc);
+  gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+  const uRes     = gl.getUniformLocation(prog, 'u_res');
+  const uTime    = gl.getUniformLocation(prog, 'u_time');
+  const uEnergy  = gl.getUniformLocation(prog, 'u_energy');
+  const uCursor  = gl.getUniformLocation(prog, 'u_cursor');
+
+  function resize(){
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = Math.floor(innerWidth  * dpr);
+    canvas.height = Math.floor(innerHeight * dpr);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  addEventListener('resize', resize);
+  resize();
+
+  /* cursor: the ring bends toward it like a gravity well.
+     fine pointers only — no interactivity on touch devices */
+  const interactive = matchMedia('(pointer:fine)').matches;
+  let energy = 0, energyTarget = 0;
+  let cx = 0, cy = 0, tx = 0, ty = 0, hasCursor = false;
+
+  /* no pinch/double-tap zoom on touch */
+  addEventListener('gesturestart', e=> e.preventDefault());
+  addEventListener('dblclick', e=> e.preventDefault(), { passive:false });
+
+  if(interactive){
+    addEventListener('pointermove', e=>{
+      const s = Math.min(innerWidth, innerHeight);
+      tx = (e.clientX - innerWidth  / 2) / s;
+      ty = -(e.clientY - innerHeight / 2) / s;   /* gl y-up */
+      hasCursor = true;
+    });
+    addEventListener('pointerleave', ()=>{ hasCursor = false; });
+  }
+
+  const t0 = performance.now();
+  let shown = false;
+  (function render(){
+    energyTarget = hasCursor ? 1.0 : 0.0;
+    energy += (energyTarget - energy) * 0.14;
+    cx += (tx - cx) * 0.2;
+    cy += (ty - cy) * 0.2;
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+    gl.uniform1f(uTime, (performance.now() - t0) / 1000);
+    gl.uniform1f(uEnergy, energy);
+    gl.uniform2f(uCursor, cx, cy);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    if(!shown){ shown = true; canvas.classList.add('on'); }
+    requestAnimationFrame(render);
+  })();
+})();
+</script>
+</body>
+</html>
