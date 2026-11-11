@@ -56,27 +56,12 @@
     text-wrap:balance;
   }
   h1 em{ font-style:normal; color:var(--accent); }
-  /* ---------- butterfly dot logo ---------- */
+  /* ---------- logo (icon + wordmark) ---------- */
   .logo{
     position:fixed; top:30px; left:36px;
-    display:flex; align-items:center; gap:16px;
     user-select:none;
   }
-  .logo svg{ width:32px; height:32px; }
-  .logo svg{ display:block; }
-  .logo .d{ fill:var(--accent); animation:wing 4.8s ease-in-out infinite; transform-origin:center; transform-box:fill-box; }
-  .logo .d2{ animation-delay:-1.2s; }
-  .logo .d3{ animation-delay:-2.4s; }
-  .logo .d4{ animation-delay:-3.6s; }
-  @keyframes wing{
-    0%,100%{ opacity:0.35; transform:scale(0.82); }
-    50%    { opacity:1;    transform:scale(1); }
-  }
-  .logo .name{
-    font-size:15px; font-weight:400;
-    letter-spacing:0.22em;
-    color:var(--text);
-  }
+  .logo img{ display:block; width:auto; height:76px; }
 
   /* plain word, bottom-right corner */
   .contact{
@@ -97,9 +82,8 @@
 
   /* ---------- small screens ---------- */
   @media (max-width:640px){
-    .logo{ top:22px; left:22px; gap:12px; }
-    .logo svg{ width:24px; height:24px; }
-    .logo .name{ font-size:13px; letter-spacing:0.18em; }
+    .logo{ top:22px; left:22px; }
+    .logo img{ height:59px; }
     h1{ font-size:clamp(1.1rem, 6.4vw, 1.7rem); }
     .contact{ bottom:22px; right:22px; font-size:9px; letter-spacing:0.24em; }
   }
@@ -108,9 +92,7 @@
   }
 
   @media (prefers-reduced-motion: reduce){
-    .reveal{ animation:none; opacity:1; transform:none; }
-    .logo .d{ animation:none; opacity:0.9; transform:none; }
-  }
+    .reveal{ animation:none; opacity:1; transform:none; }  }
 </style>
 <base target="_blank">
 </head>
@@ -118,14 +100,8 @@
 
 <canvas id="signal"></canvas>
 
-<div class="logo reveal d1" aria-label="xtropi">
-  <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true">
-    <circle class="d d1" cx="7"  cy="7"  r="3.2"/>
-    <circle class="d d2" cx="19" cy="7"  r="3.2"/>
-    <circle class="d d3" cx="7"  cy="19" r="3.2"/>
-    <circle class="d d4" cx="19" cy="19" r="3.2"/>
-  </svg>
-  <div class="name">xtropi</div>
+<div class="logo reveal d1">
+  <img src="xtropi_vertical_white.svg" alt="xtropi" width="112" height="71">
 </div>
 
 <main>
